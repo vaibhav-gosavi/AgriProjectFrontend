@@ -1,47 +1,52 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios";
+import Loader from "../components/Loader.jsx"; // Correct relative path
 
 function FilterData() {
   const [states, setStates] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [selectedState, setSelectedState] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Fetch initial data (states list)
   useEffect(() => {
     const fetchStates = async () => {
       try {
+        setLoading(true);
         const response = await axios.get("/filter-data");
         const uniqueStates = [...new Set(response.data.map((item) => item.State))];
         setStates(uniqueStates);
-        setFilteredData(response.data); // Load all data initially
+        setFilteredData(response.data);
       } catch (error) {
         console.error("Error fetching states:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchStates();
   }, []);
 
-  // Handle filtering by state
   const filterData = async () => {
     try {
+      setLoading(true);
       const params = { state: selectedState || undefined };
       const response = await axios.get("/filter-data", { params });
       setFilteredData(response.data);
     } catch (error) {
       console.error("Error filtering data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle data export
   const exportData = async () => {
     try {
+      setLoading(true);
       const params = { state: selectedState, export: true };
       const response = await axios.get("/filter-data", {
         params,
-        responseType: "blob", // To handle file download
+        responseType: "blob",
       });
-
-      // Create a link for file download
       const blob = new Blob([response.data], { type: "text/csv" });
       const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
@@ -49,6 +54,8 @@ function FilterData() {
       link.click();
     } catch (error) {
       console.error("Error exporting data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +63,6 @@ function FilterData() {
     <div className="p-6 bg-green-50 min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-6">Filter and Export Data by State</h1>
 
-      {/* State Selection */}
       <div className="mb-6">
         <label className="block text-gray-700">State</label>
         <select
@@ -73,7 +79,6 @@ function FilterData() {
         </select>
       </div>
 
-      {/* Buttons for Filtering and Exporting */}
       <div className="flex space-x-4 mb-6">
         <button
           className="bg-blue-500 text-white py-2 px-4 rounded"
@@ -89,9 +94,10 @@ function FilterData() {
         </button>
       </div>
 
-      {/* Data Table */}
       <div className="overflow-auto">
-        {filteredData.length === 0 ? (
+        {loading ? (
+          <Loader /> // Use the Loader component
+        ) : filteredData.length === 0 ? (
           <p className="text-center text-gray-500">No data found for the selected state.</p>
         ) : (
           <table className="table-auto w-full bg-white shadow-md rounded-lg">
