@@ -3,6 +3,7 @@ import axios from "../axios";
 import { motion } from "framer-motion";
 
 function News() {
+  console.log("base url is : ", axios.defaults.baseURL); // Check if the base URL is correctly set
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
 
